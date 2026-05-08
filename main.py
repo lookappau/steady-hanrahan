@@ -3,6 +3,7 @@
 import datetime
 import logging
 import sys
+import zoneinfo
 
 from src import config
 from src.utils import setup_logging, ensure_dirs
@@ -19,7 +20,7 @@ def main() -> None:
     log = logging.getLogger(__name__)
     ensure_dirs()
 
-    today = datetime.date.today()
+    today = datetime.datetime.now(zoneinfo.ZoneInfo("Australia/Adelaide")).date()
     log.info("=== steady-hanrahan starting for %s ===", today)
 
     try:
