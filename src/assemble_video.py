@@ -43,7 +43,8 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
 
     final = concatenate_videoclips(clips, method="compose")
 
-    if os.path.exists(config.MUSIC_PATH) and final.audio is not None:
+    log.info("Music path exists: %s | final.audio: %s", os.path.exists(config.MUSIC_PATH), final.audio)
+    if os.path.exists(config.MUSIC_PATH):
         try:
             music_src = AudioFileClip(config.MUSIC_PATH)
             # Manually tile music to cover the full video duration
@@ -55,7 +56,10 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
                 AudioFadeIn(2.0),
                 AudioFadeOut(4.0),
             ])
-            mixed = CompositeAudioClip([final.audio, music])
+            if final.audio is not None:
+                mixed = CompositeAudioClip([final.audio, music])
+            else:
+                mixed = music
             final = final.with_audio(mixed)
             log.info("Background music added at %.0f%% volume", config.MUSIC_VOLUME * 100)
         except Exception as exc:
