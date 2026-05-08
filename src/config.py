@@ -53,8 +53,12 @@ TTS_RATE = "+0%"
 TTS_PITCH = "+0Hz"
 
 # --- AI ---
-GEMINI_MODEL = "gemini-2.0-flash"  # Free tier: 15 RPM, 1000 RPD
+# Pipeline uses whichever key is available: Gemini first, then Groq
+GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
+GROQ_MODEL = "llama-3.3-70b-versatile"  # Free tier: 1000 req/day
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 # --- YouTube ---
 YOUTUBE_CLIENT_ID = os.environ.get("YOUTUBE_CLIENT_ID", "")

@@ -1,20 +1,16 @@
-"""Generate AI summary, reflection questions, and prayer using Google Gemini."""
+"""Generate AI summary, reflection, and prayer — tries Gemini then Groq."""
 from __future__ import annotations
 
 import logging
 import time
 
-from google import genai
-
 from src import config
 from src.utils import retry
 
-# Seconds to wait between Gemini calls — keeps us well under the free-tier RPM limit
-_GEMINI_CALL_DELAY = 5
-
+_CALL_DELAY = 5  # seconds between AI calls to avoid RPM limits
 log = logging.getLogger(__name__)
 
-# --- Fallback content used when Gemini is unavailable ---
+# --- Fallback content when all AI providers fail ---
 _FALLBACK_SUMMARY = (
     "Today's Mass readings invite us to deepen our faith and love for one another. "
     "May these sacred words nourish your spirit as you go about your day. "
@@ -33,42 +29,83 @@ _FALLBACK_PRAYER = (
 
 
 def generate_all_content(readings: dict) -> dict:
-    """Return {summary, reflection, prayer} for the given readings."""
-    if not config.GEMINI_API_KEY:
-        log.warning("GEMINI_API_KEY not set — using fallback content")
+    """Return {summary, reflection, prayer}. Tries Gemini, then Groq, then fallback."""
+    caller = _get_caller()
+    if caller is None:
+        log.warning("No AI API key configured — using fallback content")
         return {
             "summary": _FALLBACK_SUMMARY,
             "reflection": _FALLBACK_REFLECTION,
             "prayer": _FALLBACK_PRAYER,
         }
 
-    client = genai.Client(api_key=config.GEMINI_API_KEY)
-
-    summary = _safe_call(client, _build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
-    time.sleep(_GEMINI_CALL_DELAY)
-    reflection = _safe_call(client, _build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
-    time.sleep(_GEMINI_CALL_DELAY)
-    prayer = _safe_call(client, _build_prayer_prompt(readings), "prayer", _FALLBACK_PRAYER)
+    summary = _safe_call(caller, _build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
+    time.sleep(_CALL_DELAY)
+    reflection = _safe_call(caller, _build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
+    time.sleep(_CALL_DELAY)
+    prayer = _safe_call(caller, _build_prayer_prompt(readings), "prayer", _FALLBACK_PRAYER)
 
     return {"summary": summary, "reflection": reflection, "prayer": prayer}
 
 
-def _safe_call(client: genai.Client, prompt: str, label: str, fallback: str) -> str:
+# ---------------------------------------------------------------------------
+# Provider selection
+# ---------------------------------------------------------------------------
+
+def _get_caller():
+    """Return a callable(prompt) -> str using whichever API key is available."""
+    if config.GEMINI_API_KEY:
+        log.info("Using Gemini (%s)", config.GEMINI_MODEL)
+        return _make_gemini_caller()
+    if config.GROQ_API_KEY:
+        log.info("Using Groq (%s)", config.GROQ_MODEL)
+        return _make_groq_caller()
+    return None
+
+
+def _make_gemini_caller():
+    from google import genai as google_genai
+    client = google_genai.Client(api_key=config.GEMINI_API_KEY)
+
+    @retry(max_attempts=3, delay=10, exceptions=(Exception,))
+    def call(prompt: str) -> str:
+        response = client.models.generate_content(
+            model=config.GEMINI_MODEL,
+            contents=prompt,
+        )
+        return response.text.strip()
+
+    return call
+
+
+def _make_groq_caller():
+    from groq import Groq
+    client = Groq(api_key=config.GROQ_API_KEY)
+
+    @retry(max_attempts=3, delay=10, exceptions=(Exception,))
+    def call(prompt: str) -> str:
+        response = client.chat.completions.create(
+            model=config.GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=600,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content.strip()
+
+    return call
+
+
+def _safe_call(caller, prompt: str, label: str, fallback: str) -> str:
     try:
-        return _call_gemini(client, prompt)
+        return caller(prompt)
     except Exception as exc:
-        log.warning("Gemini call for '%s' failed (%s) — using fallback", label, exc)
+        log.warning("AI call for '%s' failed (%s) — using fallback", label, exc)
         return fallback
 
 
-@retry(max_attempts=3, delay=10, exceptions=(Exception,))
-def _call_gemini(client: genai.Client, prompt: str) -> str:
-    response = client.models.generate_content(
-        model=config.GEMINI_MODEL,
-        contents=prompt,
-    )
-    return response.text.strip()
-
+# ---------------------------------------------------------------------------
+# Prompts
+# ---------------------------------------------------------------------------
 
 def _build_summary_prompt(readings: dict) -> str:
     fr = readings.get("first_reading") or {}
@@ -101,7 +138,7 @@ def _build_reflection_prompt(readings: dict, summary: str) -> str:
 def _build_prayer_prompt(readings: dict) -> str:
     gospel = readings.get("gospel") or {}
     return (
-        "Write a short closing prayer (50–70 words) inspired by today's Catholic Gospel reading. "
+        "Write a short closing prayer (50-70 words) inspired by today's Catholic Gospel reading. "
         "Write in first-person plural ('Lord, help us...'). "
         "Make it warm, simple, and suitable for a Filipino-Australian Catholic community. "
         "Do not add a title or label — just the prayer text itself.\n\n"
