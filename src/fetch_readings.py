@@ -74,7 +74,8 @@ def _parse_universalis_html(html: str, date: datetime.date) -> dict:
         label = ths[0].get_text(strip=True).lower()
         reference = ths[1].get_text(strip=True)
 
-        # Collect title (first h4) and text (div.p / div.pi) until next section
+        # Collect title (first h4) and text divs until next section or non-reading content
+        _STOP_CLASSES = {"podcastentry", "audioclip", "ad", "footer"}
         title = ""
         text_parts: list[str] = []
         for sib in table.find_next_siblings():
@@ -85,6 +86,9 @@ def _parse_universalis_html(html: str, date: datetime.date) -> dict:
             if sib.name == "h4" and not title:
                 title = sib.get_text(strip=True)
             if sib.name == "div" and sib.get("class"):
+                cls = set(sib.get("class", []))
+                if cls & _STOP_CLASSES:
+                    break
                 t = sib.get_text(" ", strip=True)
                 if t:
                     text_parts.append(t)

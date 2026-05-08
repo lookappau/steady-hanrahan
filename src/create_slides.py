@@ -110,7 +110,7 @@ def _layout_title(draw: ImageDraw.Draw, img: Image.Image,
         _draw_centred(draw, label, y + 120, fonts["label"], _c("muted"))
 
     _draw_rule(draw, H - 120)
-    _draw_centred(draw, "CFCA · Catholic Filipino Community of Australia",
+    _draw_centred(draw, "Catholic Daily Mass Readings · Couples for Christ Australia",
                   H - 90, fonts["meta"], _c("muted"))
 
 
@@ -139,7 +139,7 @@ def _layout_reflection(draw: ImageDraw.Draw, img: Image.Image,
     _draw_label(draw, data.get("label", ""), y, fonts)
     y += 50
 
-    _draw_text_left(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
+    _draw_centred(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
     y += config.FONT_SIZES["heading"] + 20
 
     # Numbered reflection questions
@@ -147,10 +147,10 @@ def _layout_reflection(draw: ImageDraw.Draw, img: Image.Image,
         line = line.strip()
         if not line:
             continue
-        wrapped = wrap_text(line, max_chars=60)
+        wrapped = wrap_text(line, max_chars=78)
         for i, wl in enumerate(wrapped):
             color = _c("gold") if i == 0 and line[0].isdigit() else _c("cream")
-            _draw_text_left(draw, wl, y, fonts["body"], color)
+            _draw_centred(draw, wl, y, fonts["body"], color)
             y += config.FONT_SIZES["body"] + 8
         y += 16  # gap between questions
 
@@ -192,12 +192,12 @@ def _layout_psalm(draw: ImageDraw.Draw, img: Image.Image,
     _draw_label(draw, data.get("label", ""), y, fonts)
     y += 50
 
-    _draw_text_left(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
+    _draw_centred(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
     y += config.FONT_SIZES["heading"] + 20
 
     # Psalm text — italic for antiphon-like lines, regular for stanzas
     text = data.get("body", "")
-    lines = text.split("\n") if "\n" in text else wrap_text(text, max_chars=58)
+    lines = text.split("\n") if "\n" in text else wrap_text(text, max_chars=78)
     first = True
     for line in lines:
         line = line.strip()
@@ -206,7 +206,7 @@ def _layout_psalm(draw: ImageDraw.Draw, img: Image.Image,
             continue
         font = fonts["italic"] if first else fonts["body"]
         color = _c("gold") if first else _c("cream")
-        _draw_text_left(draw, line, y, font, color)
+        _draw_centred(draw, line, y, font, color)
         y += config.FONT_SIZES["body"] + 6
         if first:
             y += 10
@@ -229,12 +229,12 @@ def _layout_standard(draw: ImageDraw.Draw, img: Image.Image,
     _draw_label(draw, data.get("label", ""), y, fonts)
     y += 50
 
-    _draw_text_left(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
+    _draw_centred(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
     y += config.FONT_SIZES["heading"] + 20
 
     text = data.get("body", "")
-    for line in wrap_text(text, max_chars=58):
-        _draw_text_left(draw, line, y, fonts["body"], _c("cream"))
+    for line in wrap_text(text, max_chars=78):
+        _draw_centred(draw, line, y, fonts["body"], _c("cream"))
         y += config.FONT_SIZES["body"] + 8
         if y > H - 100:
             break
@@ -265,16 +265,16 @@ def _draw_rule(draw: ImageDraw.Draw, y: int) -> None:
 
 def _draw_channel_name(draw: ImageDraw.Draw, fonts: dict) -> None:
     x = MARGIN + config.LOGO_SIZE[0] + 24
-    draw.text((x, MARGIN + 10), "CFCA Daily Mass Readings",
+    draw.text((x, MARGIN + 10), "Catholic Daily Mass Readings",
               font=fonts["heading"], fill=_c("gold"))
-    draw.text((x, MARGIN + 10 + config.FONT_SIZES["heading"] + 8),
-              "Catholic Filipino Community of Australia",
+    draw.text((x, MARGIN + 10 + config.FONT_SIZES["heading"] + 20),
+              "Couples for Christ Australia",
               font=fonts["meta"], fill=_c("muted"))
 
 
 def _draw_label(draw: ImageDraw.Draw, text: str, y: int, fonts: dict) -> None:
     if text:
-        draw.text((MARGIN, y), text, font=fonts["label"], fill=_c("muted"))
+        _draw_centred(draw, text, y, fonts["label"], _c("muted"))
 
 
 def _draw_text_left(draw: ImageDraw.Draw, text: str, y: int,

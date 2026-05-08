@@ -45,7 +45,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         label=liturgical_season,
         reference="",
         narration=(
-            f"Welcome to CFCA's Daily Mass Readings. "
+            f"Welcome to Catholic Daily Mass Readings by Couples for Christ Australia. "
             f"Today is {_format_date_spoken(date_str)}, {liturgical_day}."
         ),
     ))
@@ -79,25 +79,6 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
                 narration=narration,
             ))
 
-    # --- Psalm ---
-    psalm = readings.get("psalm")
-    if psalm:
-        antiphon_match = re.search(r"^(.+?)(?:\n|\.)", psalm["text"])
-        antiphon = antiphon_match.group(1).strip() if antiphon_match else ""
-        narration = (
-            f"Responsorial Psalm. {psalm['reference']}. "
-            f"The response is: {antiphon}. "
-            + psalm["text"]
-        )
-        slides.append(_make_slide(
-            slide_type="psalm",
-            heading=psalm["reference"],
-            body=psalm["text"],
-            label="Responsorial Psalm",
-            reference=psalm["reference"],
-            narration=narration,
-        ))
-
     # --- Second Reading (Sundays) ---
     sr = readings.get("second_reading")
     if sr:
@@ -113,18 +94,6 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
                 reference=sr["reference"],
                 narration=narration,
             ))
-
-    # --- Gospel Acclamation ---
-    acc = readings.get("gospel_acclamation")
-    if acc:
-        slides.append(_make_slide(
-            slide_type="acclamation",
-            heading="Gospel Acclamation",
-            body=acc["text"],
-            label="Alleluia",
-            reference=acc.get("reference", ""),
-            narration=f"Gospel Acclamation. Alleluia. {acc['text']}. Alleluia.",
-        ))
 
     # --- Gospel (may split) ---
     gospel = readings.get("gospel") or {}
@@ -175,7 +144,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
     slides.append(_make_slide(
         slide_type="closing",
         heading="God bless you.",
-        body="Brought to you by CFCA\nCatholic Filipino Community of Australia",
+        body="Brought to you by\nCouples for Christ Australia",
         label="",
         reference="",
         narration=(

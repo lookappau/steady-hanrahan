@@ -112,8 +112,8 @@ def _build_summary_prompt(readings: dict) -> str:
     gospel = readings.get("gospel") or {}
     psalm = readings.get("psalm") or {}
     return (
-        "You are writing a short summary of today's Catholic Mass readings for members of CFCA "
-        "(Catholic Filipino Community of Australia). "
+        "You are writing a short summary of today's Catholic Mass readings for members of "
+        "Couples for Christ Australia (CFC Australia). "
         "Write 3-4 clear, warm sentences that summarise the theme and key message of today's readings. "
         "Be welcoming and accessible, suitable for all ages. Do not use bullet points or headings. "
         "Write in plain paragraphs only.\n\n"
@@ -125,11 +125,11 @@ def _build_summary_prompt(readings: dict) -> str:
 
 def _build_reflection_prompt(readings: dict, summary: str) -> str:
     return (
-        "Based on today's Catholic Mass readings for CFCA (Catholic Filipino Community of Australia), "
+        "Based on today's Catholic Mass readings for Couples for Christ Australia, "
         "write exactly 3 reflection questions that invite personal and communal prayer. "
         "Number each question (1. 2. 3.) and put each on its own line. "
         "Keep each question under 25 words. "
-        "Make them suitable for Filipino-Australian Catholic families of all ages. "
+        "Make them suitable for Australian Catholic couples and families of all ages. "
         "Do not add any introductory text — just the three numbered questions.\n\n"
         f"Theme summary: {summary}"
     )
