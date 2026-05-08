@@ -1,0 +1,15 @@
+tmp/
+*.mp4
+*.mp3
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+client_secret*.json
+token*.json
+*.egg-info/
+dist/
+build/
+.venv/
+venv/

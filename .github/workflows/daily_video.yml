@@ -1,0 +1,56 @@
+name: Daily Mass Readings Video
+
+on:
+  schedule:
+    # 8:00 AM AEST (UTC+10) = 22:00 UTC
+    # During AEDT (UTC+11, Oct–Apr) this fires at 9:00 AM — still acceptable
+    - cron: "0 22 * * *"
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  generate-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-liberation
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download Crimson Text fonts
+        run: |
+          mkdir -p assets/fonts
+          BASE="https://github.com/googlefonts/crimson-text/raw/main/fonts/ttf"
+          curl -fsSL "$BASE/CrimsonText-Regular.ttf" -o assets/fonts/CrimsonText-Regular.ttf
+          curl -fsSL "$BASE/CrimsonText-Bold.ttf"    -o assets/fonts/CrimsonText-Bold.ttf
+          curl -fsSL "$BASE/CrimsonText-Italic.ttf"  -o assets/fonts/CrimsonText-Italic.ttf
+
+      - name: Run pipeline
+        run: python main.py
+
+      - name: Upload debug artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-output-${{ github.run_id }}
+          path: tmp/
+          retention-days: 2
