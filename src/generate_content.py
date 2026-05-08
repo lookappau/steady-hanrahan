@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import time
 
-import google.generativeai as genai
+from google import genai
 
 from src import config
 from src.utils import retry
@@ -42,29 +42,31 @@ def generate_all_content(readings: dict) -> dict:
             "prayer": _FALLBACK_PRAYER,
         }
 
-    genai.configure(api_key=config.GEMINI_API_KEY)
+    client = genai.Client(api_key=config.GEMINI_API_KEY)
 
-    summary = _safe_call(_build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
+    summary = _safe_call(client, _build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
     time.sleep(_GEMINI_CALL_DELAY)
-    reflection = _safe_call(_build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
+    reflection = _safe_call(client, _build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
     time.sleep(_GEMINI_CALL_DELAY)
-    prayer = _safe_call(_build_prayer_prompt(readings), "prayer", _FALLBACK_PRAYER)
+    prayer = _safe_call(client, _build_prayer_prompt(readings), "prayer", _FALLBACK_PRAYER)
 
     return {"summary": summary, "reflection": reflection, "prayer": prayer}
 
 
-def _safe_call(prompt: str, label: str, fallback: str) -> str:
+def _safe_call(client: genai.Client, prompt: str, label: str, fallback: str) -> str:
     try:
-        return _call_gemini(prompt)
+        return _call_gemini(client, prompt)
     except Exception as exc:
         log.warning("Gemini call for '%s' failed (%s) — using fallback", label, exc)
         return fallback
 
 
 @retry(max_attempts=3, delay=10, exceptions=(Exception,))
-def _call_gemini(prompt: str) -> str:
-    model = genai.GenerativeModel(config.GEMINI_MODEL)
-    response = model.generate_content(prompt)
+def _call_gemini(client: genai.Client, prompt: str) -> str:
+    response = client.models.generate_content(
+        model=config.GEMINI_MODEL,
+        contents=prompt,
+    )
     return response.text.strip()
 
 

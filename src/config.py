@@ -53,7 +53,7 @@ TTS_RATE = "+0%"
 TTS_PITCH = "+0Hz"
 
 # --- AI ---
-GEMINI_MODEL = "gemini-1.5-flash"  # Free tier: 15 RPM, 1500 RPD
+GEMINI_MODEL = "gemini-2.0-flash"  # Free tier: 15 RPM, 1000 RPD
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # --- YouTube ---
