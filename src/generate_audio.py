@@ -16,6 +16,8 @@ _BG_READING    = os.path.join("assets", "images", "bg_reading.jpg")
 _BG_GOSPEL     = os.path.join("assets", "images", "bg_gospel.jpg")
 _BG_REFLECTION = os.path.join("assets", "images", "bg_reflection.jpg")
 
+_VOICE_MALE = config.VOICE_MALE
+
 log = logging.getLogger(__name__)
 
 
@@ -128,6 +130,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             reference=gospel.get("reference", ""),
             narration=narration,
             bg_image=_BG_GOSPEL,
+            voice=_VOICE_MALE,
         ))
 
     # --- Reflection (may split across multiple slides) ---
@@ -142,6 +145,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             reference="",
             narration=narration,
             bg_image=_BG_REFLECTION,
+            voice=_VOICE_MALE,
         ))
 
     # --- Prayer ---
@@ -153,6 +157,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         reference="",
         narration=content["prayer"],
         bg_image=_BG_REFLECTION,
+        voice=_VOICE_MALE,
     ))
 
     # --- Closing ---
@@ -168,6 +173,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             "Subscribe for daily readings, and we will see you tomorrow."
         ),
         bg_image=_BG_GOSPEL,
+        voice=_VOICE_MALE,
     ))
 
     # Number slides
@@ -183,7 +189,9 @@ def generate_all_audio(slide_scripts: list[dict]) -> list[str]:
     for slide in slide_scripts:
         sid = slide["slide_id"]
         out = os.path.join(config.AUDIO_DIR, f"audio_{sid:02d}.mp3")
-        _tts_to_file(slide["narration"], out)
+        voice = slide.get("voice", config.VOICE)
+        voice_fallback = config.VOICE_MALE_FALLBACK if voice == config.VOICE_MALE else config.VOICE_FALLBACK
+        _tts_to_file(slide["narration"], out, voice=voice, voice_fallback=voice_fallback)
         paths.append(out)
         log.info("Audio %02d: %.1fs — %s", sid, get_audio_duration(out), out)
     return paths
@@ -197,15 +205,16 @@ def get_audio_duration(mp3_path: str) -> float:
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _tts_to_file(text: str, output_path: str) -> None:
+def _tts_to_file(text: str, output_path: str,
+                 voice: str = config.VOICE,
+                 voice_fallback: str = config.VOICE_FALLBACK) -> None:
     """Run edge-tts and save to output_path. Falls back to gTTS if edge-tts fails."""
-    # Try edge-tts (Australian voices, high quality)
-    for voice in (config.VOICE, config.VOICE_FALLBACK):
+    for v in (voice, voice_fallback):
         try:
-            asyncio.run(_async_tts(text, voice, output_path))
+            asyncio.run(_async_tts(text, v, output_path))
             return
         except Exception as exc:
-            log.warning("TTS voice %s failed: %s. Trying fallback...", voice, exc)
+            log.warning("TTS voice %s failed: %s. Trying fallback...", v, exc)
 
     # Fall back to gTTS (Google TTS, Australian accent, always free)
     try:

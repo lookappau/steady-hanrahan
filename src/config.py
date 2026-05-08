@@ -48,8 +48,10 @@ MAX_CHARS_PER_LINE = 55
 MAX_WORDS_PER_SLIDE = 170
 
 # --- TTS ---
-VOICE = "en-AU-NatashaNeural"
-VOICE_FALLBACK = "en-AU-WilliamNeural"
+VOICE               = "en-AU-NatashaNeural"  # female narrator (Title → Second Reading)
+VOICE_FALLBACK      = "en-AU-NatashaNeural"
+VOICE_MALE          = "en-AU-WilliamNeural"  # male pastor (Gospel → Closing)
+VOICE_MALE_FALLBACK = "en-GB-RyanNeural"
 TTS_RATE = "+0%"
 TTS_PITCH = "+0Hz"
 
