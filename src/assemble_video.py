@@ -4,8 +4,11 @@ from __future__ import annotations
 import logging
 import os
 
-from moviepy import AudioFileClip, CompositeAudioClip, ImageClip, concatenate_videoclips
-from moviepy.audio.fx import AudioFadeIn, AudioFadeOut, AudioLoop, MultiplyVolume
+import math
+
+from moviepy import (AudioFileClip, CompositeAudioClip, ImageClip,
+                     concatenate_audioclips, concatenate_videoclips)
+from moviepy.audio.fx import AudioFadeIn, AudioFadeOut, MultiplyVolume
 from moviepy.video.fx import FadeIn, FadeOut
 
 from src import config
@@ -40,11 +43,14 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
 
     final = concatenate_videoclips(clips, method="compose")
 
-    if os.path.exists(config.MUSIC_PATH):
+    if os.path.exists(config.MUSIC_PATH) and final.audio is not None:
         try:
-            music = AudioFileClip(config.MUSIC_PATH)
+            music_src = AudioFileClip(config.MUSIC_PATH)
+            # Manually tile music to cover the full video duration
+            n_loops = math.ceil(final.duration / music_src.duration)
+            music = concatenate_audioclips([music_src] * n_loops)
+            music = music.subclipped(0, final.duration)
             music = music.with_effects([
-                AudioLoop(duration=final.duration),
                 MultiplyVolume(config.MUSIC_VOLUME),
                 AudioFadeIn(2.0),
                 AudioFadeOut(4.0),
@@ -53,7 +59,7 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
             final = final.with_audio(mixed)
             log.info("Background music added at %.0f%% volume", config.MUSIC_VOLUME * 100)
         except Exception as exc:
-            log.warning("Background music failed (%s) — continuing without it", exc)
+            log.warning("Background music failed (%s) — continuing without it", exc, exc_info=True)
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
