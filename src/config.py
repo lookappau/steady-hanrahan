@@ -29,7 +29,7 @@ COLORS = {
 }
 
 MARGIN = 80          # px from each edge
-RULE_Y_TOP = 180     # y-position of top gold rule
+RULE_Y_TOP = 220     # y-position of top gold rule
 RULE_Y_BOT = 1020    # y-position of bottom gold rule
 RULE_THICKNESS = 3
 LOGO_SIZE = (120, 120)
@@ -69,9 +69,8 @@ YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
 YOUTUBE_CATEGORY_ID = "27"  # Education
 YOUTUBE_PRIVACY = "public"
 YOUTUBE_TAGS = [
-    "Catholic", "Daily Mass", "Mass Readings", "CFCA",
-    "Australia", "Catholic Filipino", "Gospel", "Scripture", "Faith",
-    "Liturgy", "Reflection", "Prayer",
+    "Catholic", "Daily Mass", "Mass Readings",
+    "Gospel", "Scripture", "Faith", "Liturgy", "Reflection", "Prayer",
 ]
 
 # --- Readings Source ---

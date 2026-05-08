@@ -46,11 +46,16 @@ def generate_all_content(readings: dict, date: datetime.date | None = None) -> d
     summary = _safe_call(caller, _build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
     time.sleep(_CALL_DELAY)
 
-    # Use website reflection if available, otherwise fall back to AI
     website_reflection = fetch_reflection(date) if date else None
     if website_reflection:
-        log.info("Using reflection from catholic-daily-reflections.com")
-        reflection = website_reflection
+        log.info("Summarising reflection from catholic-daily-reflections.com via AI")
+        reflection = _safe_call(
+            caller,
+            _build_reflection_summarise_prompt(website_reflection),
+            "reflection",
+            website_reflection,
+        )
+        time.sleep(_CALL_DELAY)
     else:
         reflection = _safe_call(caller, _build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
         time.sleep(_CALL_DELAY)
@@ -124,8 +129,7 @@ def _build_summary_prompt(readings: dict) -> str:
     gospel = readings.get("gospel") or {}
     psalm = readings.get("psalm") or {}
     return (
-        "You are writing a short summary of today's Catholic Mass readings for members of "
-        "Couples for Christ Australia (CFC Australia). "
+        "You are writing a short summary of today's Catholic Mass readings. "
         "Write 3-4 clear, warm sentences that summarise the theme and key message of today's readings. "
         "Be welcoming and accessible, suitable for all ages. Do not use bullet points or headings. "
         "Write in plain paragraphs only.\n\n"
@@ -135,13 +139,24 @@ def _build_summary_prompt(readings: dict) -> str:
     )
 
 
+def _build_reflection_summarise_prompt(website_text: str) -> str:
+    return (
+        "You are writing a short, inspiring reflection for Catholics based on today's Mass Gospel. "
+        "Summarise the following reflection in 3-5 sentences. "
+        "Use a warm, encouraging, and spiritually uplifting tone. "
+        "Write in plain prose — no bullet points, no headings, no numbered lists. "
+        "Do not add a title or any introductory phrase — just the reflection text.\n\n"
+        f"Source reflection:\n{website_text[:2000]}"
+    )
+
+
 def _build_reflection_prompt(readings: dict, summary: str) -> str:
     return (
-        "Based on today's Catholic Mass readings for Couples for Christ Australia, "
+        "Based on today's Catholic Mass readings, "
         "write exactly 3 reflection questions that invite personal and communal prayer. "
         "Number each question (1. 2. 3.) and put each on its own line. "
         "Keep each question under 25 words. "
-        "Make them suitable for Australian Catholic couples and families of all ages. "
+        "Make them suitable for Catholics of all ages and backgrounds. "
         "Do not add any introductory text — just the three numbered questions.\n\n"
         f"Theme summary: {summary}"
     )
@@ -152,7 +167,7 @@ def _build_prayer_prompt(readings: dict) -> str:
     return (
         "Write a short closing prayer (50-70 words) inspired by today's Catholic Gospel reading. "
         "Write in first-person plural ('Lord, help us...'). "
-        "Make it warm, simple, and suitable for a Filipino-Australian Catholic community. "
+        "Make it warm, simple, and suitable for Catholics of all backgrounds. "
         "Do not add a title or label — just the prayer text itself.\n\n"
         f"Gospel ({gospel.get('reference','')}):\n{gospel.get('text','')[:600]}"
     )

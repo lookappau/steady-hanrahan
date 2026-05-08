@@ -62,6 +62,21 @@ def _fonts() -> dict:
 
 def _render_slide(data: dict, output_path: str) -> None:
     img = Image.new("RGB", (W, H), _c("bg_deep"))
+
+    bg_path = data.get("bg_image", "")
+    if bg_path and os.path.exists(bg_path):
+        try:
+            bg = Image.open(bg_path).convert("RGBA")
+            bg = bg.resize((W, H), Image.LANCZOS)
+            r, g, b, a = bg.split()
+            a = a.point(lambda x: int(x * 0.20))
+            bg = Image.merge("RGBA", (r, g, b, a))
+            img = img.convert("RGBA")
+            img = Image.alpha_composite(img, bg)
+            img = img.convert("RGB")
+        except Exception as exc:
+            log.warning("Could not apply background image %s: %s", bg_path, exc)
+
     draw = ImageDraw.Draw(img)
     fonts = _fonts()
 
@@ -110,7 +125,7 @@ def _layout_title(draw: ImageDraw.Draw, img: Image.Image,
         _draw_centred(draw, label, y + 120, fonts["label"], _c("muted"))
 
     _draw_rule(draw, H - 120)
-    _draw_centred(draw, "Catholic Daily Mass Readings · Couples for Christ Australia",
+    _draw_centred(draw, "Catholic Daily Mass Readings",
                   H - 90, fonts["meta"], _c("muted"))
 
 
@@ -142,7 +157,6 @@ def _layout_reflection(draw: ImageDraw.Draw, img: Image.Image,
     _draw_centred(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
     y += config.FONT_SIZES["heading"] + 20
 
-    # Numbered reflection questions
     for line in data.get("body", "").split("\n"):
         line = line.strip()
         if not line:
@@ -152,7 +166,11 @@ def _layout_reflection(draw: ImageDraw.Draw, img: Image.Image,
             color = _c("gold") if i == 0 and line[0].isdigit() else _c("cream")
             _draw_centred(draw, wl, y, fonts["body"], color)
             y += config.FONT_SIZES["body"] + 8
-        y += 16  # gap between questions
+            if y > H - 100:
+                break
+        y += 16
+        if y > H - 100:
+            break
 
     _draw_rule(draw, H - 60)
     _draw_footer(draw, data.get("reference", ""), fonts)
@@ -267,9 +285,6 @@ def _draw_channel_name(draw: ImageDraw.Draw, fonts: dict) -> None:
     x = MARGIN + config.LOGO_SIZE[0] + 24
     draw.text((x, MARGIN + 10), "Catholic Daily Mass Readings",
               font=fonts["heading"], fill=_c("gold"))
-    draw.text((x, MARGIN + 10 + config.FONT_SIZES["heading"] + 20),
-              "Couples for Christ Australia",
-              font=fonts["meta"], fill=_c("muted"))
 
 
 def _draw_label(draw: ImageDraw.Draw, text: str, y: int, fonts: dict) -> None:

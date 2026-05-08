@@ -12,6 +12,10 @@ from mutagen.mp3 import MP3
 from src import config
 from src.utils import split_into_chunks
 
+_BG_READING    = os.path.join("assets", "images", "bg_reading.jpg")
+_BG_GOSPEL     = os.path.join("assets", "images", "bg_gospel.jpg")
+_BG_REFLECTION = os.path.join("assets", "images", "bg_reflection.jpg")
+
 log = logging.getLogger(__name__)
 
 
@@ -45,7 +49,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         label=liturgical_season,
         reference="",
         narration=(
-            f"Welcome to Catholic Daily Mass Readings by Couples for Christ Australia. "
+            f"Welcome to Catholic Daily Mass Readings. "
             f"Today is {_format_date_spoken(date_str)}, {liturgical_day}."
         ),
     ))
@@ -77,6 +81,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
                 label="First Reading" + (f" (cont.)" if i > 0 else ""),
                 reference=fr["reference"],
                 narration=narration,
+                bg_image=_BG_READING,
             ))
 
     # --- Second Reading (Sundays) ---
@@ -93,6 +98,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
                 label="Second Reading" + (" (cont.)" if i > 0 else ""),
                 reference=sr["reference"],
                 narration=narration,
+                bg_image=_BG_READING,
             ))
 
     # --- Gospel (may split) ---
@@ -108,6 +114,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             label="Gospel" + (" (cont.)" if i > 0 else ""),
             reference=gospel.get("reference", ""),
             narration=narration,
+            bg_image=_BG_GOSPEL,
         ))
 
     # --- Summary ---
@@ -120,15 +127,19 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         narration=content["summary"],
     ))
 
-    # --- Reflection ---
-    slides.append(_make_slide(
-        slide_type="reflection",
-        heading="Reflection",
-        body=content["reflection"],
-        label="For Your Prayer",
-        reference="",
-        narration="Take a moment to reflect. " + content["reflection"].replace("\n", " "),
-    ))
+    # --- Reflection (may split across multiple slides) ---
+    reflection_chunks = split_into_chunks(content["reflection"])
+    for i, chunk in enumerate(reflection_chunks):
+        narration = ("Take a moment to reflect. " + chunk) if i == 0 else chunk
+        slides.append(_make_slide(
+            slide_type="reflection",
+            heading="Reflection",
+            body=chunk,
+            label="For Your Prayer" if i == 0 else "Reflection (cont.)",
+            reference="",
+            narration=narration,
+            bg_image=_BG_REFLECTION,
+        ))
 
     # --- Prayer ---
     slides.append(_make_slide(
@@ -144,7 +155,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
     slides.append(_make_slide(
         slide_type="closing",
         heading="God bless you.",
-        body="Brought to you by\nCouples for Christ Australia",
+        body="Catholic Daily Mass Readings",
         label="",
         reference="",
         narration=(

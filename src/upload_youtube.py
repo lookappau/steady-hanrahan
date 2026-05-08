@@ -60,7 +60,7 @@ def _build_metadata(readings: dict, content: dict) -> dict:
 
     # Human-readable date for title
     display_date = _format_date_title(date_str)
-    title = f"Daily Mass Readings — {display_date} | Couples for Christ Australia"
+    title = f"Catholic Daily Mass Readings — {display_date}"
 
     fr = readings.get("first_reading") or {}
     gospel = readings.get("gospel") or {}
@@ -89,9 +89,7 @@ def _build_metadata(readings: dict, content: dict) -> dict:
         content.get("reflection", ""),
         "",
         "─" * 40,
-        "🙏 Brought to you by Couples for Christ Australia",
-        "Subscribe for daily Mass readings:",
-        "https://www.youtube.com/@CFCADailyMass",
+        "🙏 Subscribe for daily Mass readings.",
     ]
 
     tags = list(config.YOUTUBE_TAGS)
