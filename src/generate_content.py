@@ -1,6 +1,7 @@
 """Generate AI summary, reflection, and prayer — tries Gemini then Groq."""
 from __future__ import annotations
 
+import datetime
 import logging
 import time
 
@@ -28,21 +29,32 @@ _FALLBACK_PRAYER = (
 )
 
 
-def generate_all_content(readings: dict) -> dict:
+def generate_all_content(readings: dict, date: datetime.date | None = None) -> dict:
     """Return {summary, reflection, prayer}. Tries Gemini, then Groq, then fallback."""
+    from src.fetch_reflection import fetch_reflection
+
     caller = _get_caller()
     if caller is None:
         log.warning("No AI API key configured — using fallback content")
+        website_reflection = fetch_reflection(date) if date else None
         return {
             "summary": _FALLBACK_SUMMARY,
-            "reflection": _FALLBACK_REFLECTION,
+            "reflection": website_reflection or _FALLBACK_REFLECTION,
             "prayer": _FALLBACK_PRAYER,
         }
 
     summary = _safe_call(caller, _build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
     time.sleep(_CALL_DELAY)
-    reflection = _safe_call(caller, _build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
-    time.sleep(_CALL_DELAY)
+
+    # Use website reflection if available, otherwise fall back to AI
+    website_reflection = fetch_reflection(date) if date else None
+    if website_reflection:
+        log.info("Using reflection from catholic-daily-reflections.com")
+        reflection = website_reflection
+    else:
+        reflection = _safe_call(caller, _build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
+        time.sleep(_CALL_DELAY)
+
     prayer = _safe_call(caller, _build_prayer_prompt(readings), "prayer", _FALLBACK_PRAYER)
 
     return {"summary": summary, "reflection": reflection, "prayer": prayer}

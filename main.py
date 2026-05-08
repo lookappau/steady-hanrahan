@@ -27,7 +27,7 @@ def main() -> None:
         readings = fetch_readings(today)
 
         log.info("[2/6] Generating summary and reflection...")
-        content = generate_all_content(readings)
+        content = generate_all_content(readings, today)
 
         log.info("[3/6] Building slide scripts and generating audio...")
         slide_scripts = build_slide_scripts(readings, content)
