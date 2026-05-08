@@ -157,7 +157,14 @@ def _layout_reflection(draw: ImageDraw.Draw, img: Image.Image,
     _draw_centred(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
     y += config.FONT_SIZES["heading"] + 20
 
-    for line in data.get("body", "").split("\n"):
+    body = data.get("body", "")
+    text_h = _text_block_height(body, max_chars=78,
+                                font_size=config.FONT_SIZES["body"],
+                                line_gap=8, para_gap=16)
+    available = (H - 60) - y
+    y += max(0, (available - text_h) // 2)
+
+    for line in body.split("\n"):
         line = line.strip()
         if not line:
             continue
@@ -190,8 +197,13 @@ def _layout_prayer(draw: ImageDraw.Draw, img: Image.Image,
     _draw_centred(draw, data.get("heading", ""), y, fonts["heading"], _c("gold"))
     y += config.FONT_SIZES["heading"] + 40
 
-    # Prayer text centred italic
-    for line in wrap_text(data.get("body", ""), max_chars=52):
+    body = data.get("body", "")
+    text_h = _text_block_height(body, max_chars=52,
+                                font_size=config.FONT_SIZES["body"], line_gap=10)
+    available = (H - 60) - y
+    y += max(0, (available - text_h) // 2)
+
+    for line in wrap_text(body, max_chars=52):
         _draw_centred(draw, line, y, fonts["italic"], _c("cream"))
         y += config.FONT_SIZES["body"] + 10
 
@@ -251,6 +263,11 @@ def _layout_standard(draw: ImageDraw.Draw, img: Image.Image,
     y += config.FONT_SIZES["heading"] + 20
 
     text = data.get("body", "")
+    text_h = _text_block_height(text, max_chars=78,
+                                font_size=config.FONT_SIZES["body"], line_gap=8)
+    available = (H - 60) - y
+    y += max(0, (available - text_h) // 2)
+
     for line in wrap_text(text, max_chars=78):
         _draw_centred(draw, line, y, fonts["body"], _c("cream"))
         y += config.FONT_SIZES["body"] + 8
@@ -309,6 +326,19 @@ def _draw_footer(draw: ImageDraw.Draw, reference: str, fonts: dict) -> None:
     y = H - 50
     if reference:
         draw.text((MARGIN, y), reference, font=fonts["meta"], fill=_c("muted"))
+
+
+def _text_block_height(body: str, max_chars: int,
+                       font_size: int, line_gap: int, para_gap: int = 0) -> int:
+    """Pre-calculate total pixel height of body text before drawing."""
+    total = 0
+    paragraphs = [p.strip() for p in body.split("\n") if p.strip()]
+    for i, para in enumerate(paragraphs):
+        lines = wrap_text(para, max_chars=max_chars)
+        total += len(lines) * (font_size + line_gap)
+        if i < len(paragraphs) - 1:
+            total += para_gap
+    return total
 
 
 def _draw_logo(img: Image.Image, x: int, y: int,

@@ -18,6 +18,10 @@ ENCODE_PRESET = "fast"
 ENCODE_THREADS = 4
 VIDEO_TRANSITION = 0.4   # seconds — fade in/out duration per slide
 
+# --- Background Music ---
+MUSIC_PATH   = "assets/music/background.mp3"
+MUSIC_VOLUME = 0.12   # 12% — soft under narration
+
 # --- Slide Design ---
 COLORS = {
     "bg_deep":  "#1A1033",

@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 import os
 
-from moviepy import AudioFileClip, ImageClip, concatenate_videoclips
+from moviepy import AudioFileClip, CompositeAudioClip, ImageClip, concatenate_videoclips
+from moviepy.audio.fx import AudioFadeIn, AudioFadeOut, AudioLoop, MultiplyVolume
 from moviepy.video.fx import FadeIn, FadeOut
 
 from src import config
@@ -38,6 +39,22 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
     log.info("Total video duration: %.0f seconds (%.1f minutes)", total_duration, total_duration / 60)
 
     final = concatenate_videoclips(clips, method="compose")
+
+    if os.path.exists(config.MUSIC_PATH):
+        try:
+            music = AudioFileClip(config.MUSIC_PATH)
+            music = music.with_effects([
+                AudioLoop(duration=final.duration),
+                MultiplyVolume(config.MUSIC_VOLUME),
+                AudioFadeIn(2.0),
+                AudioFadeOut(4.0),
+            ])
+            mixed = CompositeAudioClip([final.audio, music])
+            final = final.with_audio(mixed)
+            log.info("Background music added at %.0f%% volume", config.MUSIC_VOLUME * 100)
+        except Exception as exc:
+            log.warning("Background music failed (%s) — continuing without it", exc)
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     log.info("Encoding video → %s", output_path)
