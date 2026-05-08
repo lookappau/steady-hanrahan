@@ -16,6 +16,7 @@ VIDEO_CODEC = "libx264"
 AUDIO_CODEC = "aac"
 ENCODE_PRESET = "fast"
 ENCODE_THREADS = 4
+VIDEO_TRANSITION = 0.4   # seconds — fade in/out duration per slide
 
 # --- Slide Design ---
 COLORS = {

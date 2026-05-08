@@ -5,6 +5,7 @@ import logging
 import os
 
 from moviepy import AudioFileClip, ImageClip, concatenate_videoclips
+from moviepy.video.fx import FadeIn, FadeOut
 
 from src import config
 
@@ -27,7 +28,10 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
         duration = audio.duration
         total_duration += duration
 
-        img = ImageClip(slide_path).with_duration(duration).with_audio(audio)
+        img = (ImageClip(slide_path)
+               .with_duration(duration)
+               .with_audio(audio)
+               .with_effects([FadeIn(config.VIDEO_TRANSITION), FadeOut(config.VIDEO_TRANSITION)]))
         clips.append(img)
         log.debug("Clip %02d: %.1fs", i, duration)
 

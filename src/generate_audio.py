@@ -52,6 +52,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             f"Welcome to Catholic Daily Mass Readings. "
             f"Today is {_format_date_spoken(date_str)}, {liturgical_day}."
         ),
+        bg_image=_BG_GOSPEL,
     ))
 
     # --- 01: Liturgical Context ---
@@ -65,6 +66,18 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             f"Today we celebrate {liturgical_day}. "
             f"We are in the season of {liturgical_season}."
         ),
+        bg_image=_BG_READING,
+    ))
+
+    # --- Summary ---
+    slides.append(_make_slide(
+        slide_type="summary",
+        heading="Summary",
+        body=content["summary"],
+        label="Today's Theme",
+        reference="",
+        narration=content["summary"],
+        bg_image=_BG_READING,
     ))
 
     # --- First Reading (may split) ---
@@ -117,16 +130,6 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             bg_image=_BG_GOSPEL,
         ))
 
-    # --- Summary ---
-    slides.append(_make_slide(
-        slide_type="summary",
-        heading="Summary",
-        body=content["summary"],
-        label="Today's Theme",
-        reference="",
-        narration=content["summary"],
-    ))
-
     # --- Reflection (may split across multiple slides) ---
     reflection_chunks = split_into_chunks(content["reflection"])
     for i, chunk in enumerate(reflection_chunks):
@@ -149,6 +152,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         label="Let Us Pray",
         reference="",
         narration=content["prayer"],
+        bg_image=_BG_REFLECTION,
     ))
 
     # --- Closing ---
@@ -163,6 +167,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             "God bless you and your family. "
             "Subscribe for daily readings, and we will see you tomorrow."
         ),
+        bg_image=_BG_GOSPEL,
     ))
 
     # Number slides
