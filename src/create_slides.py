@@ -90,6 +90,8 @@ def _render_slide(data: dict, output_path: str) -> None:
         _layout_reflection(draw, img, fonts, data)
     elif slide_type == "prayer":
         _layout_prayer(draw, img, fonts, data)
+    elif slide_type == "letuspray":
+        _layout_letuspray(draw, img, fonts, data)
     elif slide_type == "psalm":
         _layout_psalm(draw, img, fonts, data)
     else:
@@ -209,6 +211,15 @@ def _layout_prayer(draw: ImageDraw.Draw, img: Image.Image,
 
     _draw_rule(draw, H - 60)
     _draw_footer(draw, "", fonts)
+
+
+def _layout_letuspray(draw: ImageDraw.Draw, img: Image.Image,
+                      fonts: dict, data: dict) -> None:
+    _draw_background_accent(draw)
+    _draw_logo(img, MARGIN, MARGIN, config.LOGO_SIZE)
+    _draw_rule(draw, config.RULE_Y_TOP)
+    _draw_centred(draw, data.get("heading", ""), H // 2 - 40, fonts["title"], _c("gold"))
+    _draw_rule(draw, H - 60)
 
 
 def _layout_psalm(draw: ImageDraw.Draw, img: Image.Image,

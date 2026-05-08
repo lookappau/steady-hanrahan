@@ -148,6 +148,18 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             voice=_VOICE_MALE,
         ))
 
+    # --- Let Us Pray (transition) ---
+    slides.append(_make_slide(
+        slide_type="letuspray",
+        heading="Let Us Pray",
+        body="",
+        label="",
+        reference="",
+        narration="Let us now still our hearts and turn to God in prayer.",
+        bg_image=_BG_REFLECTION,
+        voice=_VOICE_MALE,
+    ))
+
     # --- Prayer ---
     slides.append(_make_slide(
         slide_type="prayer",
