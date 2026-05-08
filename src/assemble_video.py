@@ -47,10 +47,13 @@ def assemble_video(slide_paths: list[str], audio_paths: list[str],
     if os.path.exists(config.MUSIC_PATH):
         try:
             music_src = AudioFileClip(config.MUSIC_PATH)
-            # Manually tile music to cover the full video duration
-            n_loops = math.ceil(final.duration / music_src.duration)
-            music = concatenate_audioclips([music_src] * n_loops)
-            music = music.subclipped(0, final.duration)
+            # Tile music clips to exactly cover the video duration
+            n_full = int(final.duration / music_src.duration)
+            remainder = final.duration - n_full * music_src.duration
+            chunks = [music_src] * n_full
+            if remainder > 0.01:
+                chunks.append(music_src.subclipped(0, remainder))
+            music = concatenate_audioclips(chunks)
             music = music.with_effects([
                 MultiplyVolume(config.MUSIC_VOLUME),
                 AudioFadeIn(2.0),
