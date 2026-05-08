@@ -104,7 +104,7 @@ def _make_groq_caller():
         response = client.chat.completions.create(
             model=config.GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=600,
+            max_tokens=1000,
             temperature=0.7,
         )
         return response.choices[0].message.content.strip()
@@ -141,12 +141,14 @@ def _build_summary_prompt(readings: dict) -> str:
 
 def _build_reflection_summarise_prompt(website_text: str) -> str:
     return (
-        "You are writing a short, inspiring reflection for Catholics based on today's Mass Gospel. "
-        "Summarise the following reflection in 3-5 sentences. "
-        "Use a warm, encouraging, and spiritually uplifting tone. "
+        "You are rewriting a Catholic daily reflection for use in a devotional video. "
+        "Reword the following reflection to remove redundancy and verbose phrasing, "
+        "while preserving every key spiritual insight, message, and point of application. "
+        "Do not cut or omit any meaningful idea — only tighten the language. "
+        "Use a warm, clear, and spiritually uplifting tone suitable for all Catholics. "
         "Write in plain prose — no bullet points, no headings, no numbered lists. "
         "Do not add a title or any introductory phrase — just the reflection text.\n\n"
-        f"Source reflection:\n{website_text[:2000]}"
+        f"Source reflection:\n{website_text[:2500]}"
     )
 
 
