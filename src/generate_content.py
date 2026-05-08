@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import logging
-import os
+import time
 
 import google.generativeai as genai
 
 from src import config
 from src.utils import retry
+
+# Seconds to wait between Gemini calls — keeps us well under the free-tier RPM limit
+_GEMINI_CALL_DELAY = 5
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +45,9 @@ def generate_all_content(readings: dict) -> dict:
     genai.configure(api_key=config.GEMINI_API_KEY)
 
     summary = _safe_call(_build_summary_prompt(readings), "summary", _FALLBACK_SUMMARY)
+    time.sleep(_GEMINI_CALL_DELAY)
     reflection = _safe_call(_build_reflection_prompt(readings, summary), "reflection", _FALLBACK_REFLECTION)
+    time.sleep(_GEMINI_CALL_DELAY)
     prayer = _safe_call(_build_prayer_prompt(readings), "prayer", _FALLBACK_PRAYER)
 
     return {"summary": summary, "reflection": reflection, "prayer": prayer}

@@ -213,15 +213,31 @@ def get_audio_duration(mp3_path: str) -> float:
 # ---------------------------------------------------------------------------
 
 def _tts_to_file(text: str, output_path: str) -> None:
-    """Run edge-tts and save to output_path. Falls back to secondary voice."""
+    """Run edge-tts and save to output_path. Falls back to gTTS if edge-tts fails."""
+    # Try edge-tts (Australian voices, high quality)
     for voice in (config.VOICE, config.VOICE_FALLBACK):
         try:
             asyncio.run(_async_tts(text, voice, output_path))
             return
         except Exception as exc:
             log.warning("TTS voice %s failed: %s. Trying fallback...", voice, exc)
+
+    # Fall back to gTTS (Google TTS, Australian accent, always free)
+    try:
+        _gtts_to_file(text, output_path)
+        log.info("Used gTTS fallback for %s", output_path)
+        return
+    except Exception as exc:
+        log.warning("gTTS fallback failed: %s", exc)
+
     log.error("All TTS voices failed for slide — writing silent placeholder")
     _write_silent_mp3(output_path)
+
+
+def _gtts_to_file(text: str, output_path: str) -> None:
+    from gtts import gTTS
+    tts = gTTS(text=text, lang="en", tld="com.au", slow=False)
+    tts.save(output_path)
 
 
 async def _async_tts(text: str, voice: str, output_path: str) -> None:
