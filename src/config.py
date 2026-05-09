@@ -52,12 +52,14 @@ MAX_CHARS_PER_LINE = 55
 MAX_WORDS_PER_SLIDE = 170
 
 # --- TTS ---
-VOICE               = "en-AU-NatashaNeural"  # female narrator (Title → Second Reading)
-VOICE_FALLBACK      = "en-AU-NatashaNeural"
-VOICE_MALE          = "en-AU-WilliamNeural"  # male pastor (Gospel → Closing)
-VOICE_MALE_FALLBACK = "en-GB-RyanNeural"
-TTS_RATE  = "-15%"   # slower, measured pace for liturgical readings
-TTS_PITCH = "-3Hz"   # slight lowering adds gravitas
+VOICE                = "en-US-AriaNeural"    # female narrator
+VOICE_FALLBACK       = "en-US-JennyNeural"
+VOICE_MALE           = "en-US-GuyNeural"     # male pastor
+VOICE_MALE_FALLBACK  = "en-US-TonyNeural"
+TTS_RATE             = "-15%"
+TTS_PITCH            = "-3Hz"
+TTS_RATE_EMPHATIC    = "-20%"   # slower for reflection/prayer
+TTS_PITCH_EMPHATIC   = "-5Hz"
 
 # --- AI ---
 # Pipeline uses whichever key is available: Gemini first, then Groq

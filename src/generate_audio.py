@@ -55,6 +55,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             f"Today is {_format_date_spoken(date_str)}, {liturgical_day}."
         ),
         bg_image=_BG_GOSPEL,
+        tts_style="cheerful",
     ))
 
     # --- 01: Liturgical Context ---
@@ -80,6 +81,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         reference="",
         narration=content["summary"],
         bg_image=_BG_READING,
+        tts_style="empathetic",
     ))
 
     # --- First Reading (may split) ---
@@ -97,6 +99,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
                 reference=fr["reference"],
                 narration=narration,
                 bg_image=_BG_READING,
+                tts_style="narration-professional",
             ))
 
     # --- Second Reading (Sundays) ---
@@ -114,6 +117,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
                 reference=sr["reference"],
                 narration=narration,
                 bg_image=_BG_READING,
+                tts_style="narration-professional",
             ))
 
     # --- Gospel (may split) ---
@@ -131,6 +135,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             narration=narration,
             bg_image=_BG_GOSPEL,
             voice=_VOICE_MALE,
+            tts_style="newscast",
         ))
 
     # --- Reflection (may split across multiple slides) ---
@@ -146,6 +151,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
             narration=narration,
             bg_image=_BG_REFLECTION,
             voice=_VOICE_MALE,
+            tts_style="empathetic",
         ))
 
     # --- Let Us Pray (transition) ---
@@ -158,6 +164,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         narration="Let us now still our hearts and turn to God in prayer.",
         bg_image=_BG_REFLECTION,
         voice=_VOICE_MALE,
+        tts_style="empathetic",
     ))
 
     # --- Prayer ---
@@ -170,6 +177,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         narration=content["prayer"],
         bg_image=_BG_REFLECTION,
         voice=_VOICE_MALE,
+        tts_style="empathetic",
     ))
 
     # --- Closing ---
@@ -186,6 +194,7 @@ def build_slide_scripts(readings: dict, content: dict) -> list[dict]:
         ),
         bg_image=_BG_GOSPEL,
         voice=_VOICE_MALE,
+        tts_style="cheerful",
     ))
 
     # Number slides
@@ -202,8 +211,13 @@ def generate_all_audio(slide_scripts: list[dict]) -> list[str]:
         sid = slide["slide_id"]
         out = os.path.join(config.AUDIO_DIR, f"audio_{sid:02d}.mp3")
         voice = slide.get("voice", config.VOICE)
+        tts_style = slide.get("tts_style")
+        emphatic = tts_style == "empathetic"
+        rate  = config.TTS_RATE_EMPHATIC  if emphatic else config.TTS_RATE
+        pitch = config.TTS_PITCH_EMPHATIC if emphatic else config.TTS_PITCH
         voice_fallback = config.VOICE_MALE_FALLBACK if voice == config.VOICE_MALE else config.VOICE_FALLBACK
-        _tts_to_file(slide["narration"], out, voice=voice, voice_fallback=voice_fallback)
+        _tts_to_file(slide["narration"], out, voice=voice, voice_fallback=voice_fallback,
+                     style=tts_style, rate=rate, pitch=pitch)
         paths.append(out)
         log.info("Audio %02d: %.1fs — %s", sid, get_audio_duration(out), out)
     return paths
@@ -219,11 +233,14 @@ def get_audio_duration(mp3_path: str) -> float:
 
 def _tts_to_file(text: str, output_path: str,
                  voice: str = config.VOICE,
-                 voice_fallback: str = config.VOICE_FALLBACK) -> None:
+                 voice_fallback: str = config.VOICE_FALLBACK,
+                 style: str | None = None,
+                 rate: str = config.TTS_RATE,
+                 pitch: str = config.TTS_PITCH) -> None:
     """Run edge-tts and save to output_path. Falls back to gTTS if edge-tts fails."""
     for v in (voice, voice_fallback):
         try:
-            asyncio.run(_async_tts(text, v, output_path))
+            asyncio.run(_async_tts(text, v, output_path, style=style, rate=rate, pitch=pitch))
             return
         except Exception as exc:
             log.warning("TTS voice %s failed: %s. Trying fallback...", v, exc)
@@ -246,10 +263,24 @@ def _gtts_to_file(text: str, output_path: str) -> None:
     tts.save(output_path)
 
 
-async def _async_tts(text: str, voice: str, output_path: str) -> None:
-    communicate = edge_tts.Communicate(
-        text, voice, rate=config.TTS_RATE, pitch=config.TTS_PITCH
-    )
+async def _async_tts(text: str, voice: str, output_path: str,
+                     style: str | None = None,
+                     rate: str = config.TTS_RATE,
+                     pitch: str = config.TTS_PITCH) -> None:
+    if style:
+        import html as _html
+        payload = (
+            "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' "
+            "xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='en-US'>"
+            f"<voice name='{voice}'>"
+            f"<mstts:express-as style='{style}'>"
+            f"<prosody rate='{rate}' pitch='{pitch}'>"
+            f"{_html.escape(text)}"
+            "</prosody></mstts:express-as></voice></speak>"
+        )
+        communicate = edge_tts.Communicate(payload, voice, rate=rate, pitch=pitch)
+    else:
+        communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
     await communicate.save(output_path)
 
 
