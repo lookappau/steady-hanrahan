@@ -56,8 +56,8 @@ VOICE               = "en-AU-NatashaNeural"  # female narrator (Title → Second
 VOICE_FALLBACK      = "en-AU-NatashaNeural"
 VOICE_MALE          = "en-AU-WilliamNeural"  # male pastor (Gospel → Closing)
 VOICE_MALE_FALLBACK = "en-GB-RyanNeural"
-TTS_RATE = "+0%"
-TTS_PITCH = "+0Hz"
+TTS_RATE  = "-15%"   # slower, measured pace for liturgical readings
+TTS_PITCH = "-3Hz"   # slight lowering adds gravitas
 
 # --- AI ---
 # Pipeline uses whichever key is available: Gemini first, then Groq
