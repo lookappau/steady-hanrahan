@@ -267,20 +267,9 @@ async def _async_tts(text: str, voice: str, output_path: str,
                      style: str | None = None,
                      rate: str = config.TTS_RATE,
                      pitch: str = config.TTS_PITCH) -> None:
-    if style:
-        import html as _html
-        payload = (
-            "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' "
-            "xmlns:mstts='http://www.w3.org/2001/mstts' xml:lang='en-US'>"
-            f"<voice name='{voice}'>"
-            f"<mstts:express-as style='{style}'>"
-            f"<prosody rate='{rate}' pitch='{pitch}'>"
-            f"{_html.escape(text)}"
-            "</prosody></mstts:express-as></voice></speak>"
-        )
-        communicate = edge_tts.Communicate(payload, voice, rate=rate, pitch=pitch)
-    else:
-        communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
+    # edge-tts does not support SSML passthrough — style param is accepted
+    # for future compatibility but ignored here; voice + prosody carry the tone.
+    communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
     await communicate.save(output_path)
 
 
