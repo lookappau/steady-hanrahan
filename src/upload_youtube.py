@@ -26,10 +26,8 @@ def upload_video(video_path: str, readings: dict, content: dict) -> str:
     if not all([config.YOUTUBE_CLIENT_ID,
                 config.YOUTUBE_CLIENT_SECRET,
                 config.YOUTUBE_REFRESH_TOKEN]):
-        raise EnvironmentError(
-            "YouTube credentials not set. "
-            "Run scripts/youtube_auth_setup.py to generate them."
-        )
+        log.info("YouTube credentials not configured — skipping upload")
+        return None
 
     youtube = _get_authenticated_service()
     metadata = _build_metadata(readings, content)

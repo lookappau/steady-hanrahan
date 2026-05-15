@@ -45,8 +45,15 @@ def main() -> None:
         )
 
         log.info("[6/6] Uploading to YouTube...")
-        url = upload_video(video_path, readings, content)
-        log.info("=== SUCCESS: %s ===", url)
+        try:
+            url = upload_video(video_path, readings, content)
+            if url:
+                log.info("=== SUCCESS: %s ===", url)
+            else:
+                log.info("=== SUCCESS (upload skipped): %s ===", video_path)
+        except Exception as exc:
+            log.warning("YouTube upload failed — video saved locally: %s", exc)
+            log.info("=== SUCCESS (upload skipped): %s ===", video_path)
 
     except Exception:
         log.exception("Pipeline failed")
