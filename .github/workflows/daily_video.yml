@@ -2,9 +2,9 @@ name: Daily Mass Readings Video
 
 on:
   schedule:
-    # 5:00 AM ACST (UTC+9:30) = 19:30 UTC
-    # During ACDT (UTC+10:30, Oct–Apr) this fires at 6:00 AM Adelaide — acceptable
-    - cron: "30 19 * * *"
+    # 3:00 AM ACST (UTC+9:30) = 17:30 UTC
+    # During ACDT (UTC+10:30, Oct–Apr) this fires at 4:00 AM Adelaide — acceptable
+    - cron: "30 17 * * *"
   workflow_dispatch: # Allow manual trigger for testing
 
 jobs:
